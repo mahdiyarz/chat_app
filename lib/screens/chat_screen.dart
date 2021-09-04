@@ -9,24 +9,37 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Chat Screen')),
-      body: ListView.builder(
-        itemCount: 10,
-        itemBuilder: (ctx, index) => Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text('my chat app'),
+      body: FutureBuilder(
+        future: Firebase.initializeApp(),
+        builder: (ctx, snapshots) => StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('chats/3EZTXsmHvM7QEpCiE99b/messages')
+              .snapshots(),
+          builder:
+              (BuildContext ctx, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
+            if (streamSnapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            final documents = streamSnapshot.data!.docs;
+            return ListView.builder(
+              itemCount: documents.length,
+              itemBuilder: (ctx, index) => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(documents[index]['text']),
+              ),
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Firebase.initializeApp();
-          FirebaseFirestore.instance
-              .collection('chats/3EZTXsmHvM7QEpCiE99b/messages')
-              .snapshots()
-              .listen((data) {
-            data.docs.forEach((element) {
-              print(element['text']);
-            });
-          });
+          //     .listen((data) {
+          //   data.docs.forEach((element) {
+          //     print(element['text']);
+          //   });
+          // });
         },
         child: Icon(Icons.message),
       ),
